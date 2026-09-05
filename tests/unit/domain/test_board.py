@@ -1,4 +1,7 @@
 from chess_game.domain.board import Board
+from chess_game.domain.move import Move
+from chess_game.domain.position import Position
+
 from chess_game.domain.pieces.bishop import Bishop
 from chess_game.domain.pieces.king import King
 from chess_game.domain.pieces.knight import Knight
@@ -65,3 +68,59 @@ def test_move_piece():
 
     assert moved_piece is not None
     assert moved_piece.color == PieceColor.WHITE
+
+def test_apply_move():
+    board = Board()
+
+    pawn = board.get_box(1, 4).piece
+
+    move = Move(
+        start=Position(1, 4),
+        end=Position(3, 4),
+        piece=pawn,
+    )
+
+    board.apply_move(move)
+
+    assert board.get_box(1, 4).is_empty()
+    assert board.get_box(3, 4).piece is pawn
+
+def test_apply_move_captures_opponent_piece():
+    board = Board()
+
+    white_pawn = board.get_box(1, 4).piece
+    black_pawn = board.get_box(6, 3).piece
+
+    # Put the pawns in capture position.
+    board.move_piece(1, 4, 3, 4)
+    board.move_piece(6, 3, 4, 3)
+
+    move = Move(
+        start=Position(3, 4),
+        end=Position(4, 3),
+        piece=white_pawn,
+        captured_piece=black_pawn,
+    )
+
+    board.apply_move(move)
+
+    assert board.get_box(3, 4).is_empty()
+    assert board.get_box(4, 3).piece is white_pawn
+    assert black_pawn.is_captured
+
+def test_undo_move_restores_board():
+    board = Board()
+
+    pawn = board.get_box(1, 4).get_piece()
+
+    move = Move(
+        start=Position(1, 4),
+        end=Position(3, 4),
+        piece=pawn,
+    )
+
+    board.apply_move(move)
+    board.undo_move(move)
+
+    assert board.get_box(1, 4).get_piece() is pawn
+    assert board.get_box(3, 4).is_empty()

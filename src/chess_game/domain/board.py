@@ -1,4 +1,6 @@
 from chess_game.domain.box import Box
+from chess_game.domain.move import Move
+
 from chess_game.domain.pieces.bishop import Bishop
 from chess_game.domain.pieces.king import King
 from chess_game.domain.pieces.knight import Knight
@@ -82,3 +84,45 @@ class Board:
         piece = start_box.remove_piece()
 
         end_box.set_piece(piece)
+
+    def apply_move(self, move: Move) -> None:
+        start_box = self.get_box(
+            move.start.row,
+            move.start.column,
+        )
+
+        end_box = self.get_box(
+            move.end.row,
+            move.end.column,
+        )
+
+        if start_box.is_empty():
+            raise ValueError("There is no piece at the starting position")
+
+        piece = start_box.remove_piece()
+
+        if not end_box.is_empty():
+            captured_piece = end_box.remove_piece()
+            if captured_piece is not None:
+                captured_piece.capture()
+
+        end_box.set_piece(piece)
+
+    def undo_move(self, move: Move) -> None:
+        moving_piece = self.get_box(
+            move.end.row,
+            move.end.column,
+        ).remove_piece()
+
+        self.get_box(
+            move.start.row,
+            move.start.column,
+        ).set_piece(moving_piece)
+
+        if move.captured_piece is not None:
+            move.captured_piece.is_captured = False
+
+            self.get_box(
+                move.end.row,
+                move.end.column,
+            ).set_piece(move.captured_piece)

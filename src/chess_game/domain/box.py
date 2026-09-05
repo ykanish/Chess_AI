@@ -21,3 +21,6 @@ class Box:
         piece = self.piece
         self.piece = None
         return piece
+
+    def get_piece(self) -> "Piece | None":
+        return self.piece
